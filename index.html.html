@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資産シミュレーター｜将来の資産を無料で計算</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --font: 'Noto Sans JP', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-label {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub { color: var(--text2); font-size: 14px; font-weight: 300; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .field-label {
+    font-size: 13px;
+    color: var(--text2);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .field-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  input[type="number"] {
+    width: 92px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 6px 10px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus { border-color: var(--accent); }
+
+  .field-unit {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    width: 50px;
+  }
+
+  .section-sep {
+    margin: 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--accent3);
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+
+  /* Expense list */
+  .expense-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .expense-item {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .expense-item:focus-within { border-color: rgba(59,130,246,0.4); }
+
+  .expense-name-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+  }
+
+  .expense-name-input::placeholder { color: var(--text3); }
+
+  .expense-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .expense-amount-input {
+    width: 72px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 9px 8px;
+    text-align: right;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+
+  .expense-amount-input::-webkit-outer-spin-button,
+  .expense-amount-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .expense-unit {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    padding-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    border-left: 1px solid var(--border);
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 9px 10px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+
+  .delete-btn:hover { color: var(--danger); background: rgba(239,68,68,0.08); }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    color: var(--text3);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 8px 12px;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.15s, color 0.15s;
+    margin-top: 8px;
+  }
+
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .expense-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 4px 0;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .expense-summary-val {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: var(--text2);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  .toggle input:checked + .toggle-slider { background: rgba(59,130,246,0.3); }
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(18px);
+    background: var(--accent);
+  }
+
+  .toggle-label { font-size: 13px; color: var(--text2); }
+
+  .invest-section { opacity: 0.35; pointer-events: none; transition: opacity 0.2s; }
+  .invest-section.active { opacity: 1; pointer-events: auto; }
+
+  /* Right col */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 600px) { .result-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+
+  .result-card.highlight { border-color: rgba(59,130,246,0.35); background: rgba(59,130,246,0.06); }
+  .result-card.warn { border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.05); }
+
+  .rc-label { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.05em; margin-bottom: 5px; }
+  .rc-value { font-size: 20px; font-family: var(--mono); font-weight: 500; color: var(--text); line-height: 1; }
+  .result-card.highlight .rc-value { color: var(--accent); }
+  .result-card.warn .rc-value { color: var(--danger); }
+  .rc-unit { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+  .chart-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-title { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+  .legend { display: flex; gap: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  .timeline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+
+  .timeline-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  th {
+    text-align: right;
+    padding: 7px 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th:first-child { text-align: left; }
+
+  td {
+    text-align: right;
+    padding: 9px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text2);
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    white-space: nowrap;
+  }
+
+  td:first-child { text-align: left; color: var(--text3); font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .td-total { color: var(--accent) !important; font-weight: 500; }
+  tr:hover td { background: rgba(59,130,246,0.03); }
+
+  footer {
+    text-align: center;
+    padding: 40px 0 28px;
+    color: var(--text3);
+    font-size: 11px;
+    line-height: 1.8;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-label">FREE SIMULATOR</div>
+    <h1>将来の<span>資産</span>を計算する</h1>
+    <p class="header-sub">収入・支出・投資を入力して、資産の推移をシミュレーション</p>
+  </header>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-title">基本情報</div>
+
+      <div class="field-row">
+        <span class="field-label">現在の年齢</span>
+        <div class="field-input-wrap">
+          <input type="number" id="age" value="25" min="1" max="99" oninput="update()">
+          <span class="field-unit">歳</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">シミュレーション期間</span>
+        <div class="field-input-wrap">
+          <input type="number" id="years" value="20" min="1" max="50" oninput="update()">
+          <span class="field-unit">年</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">年収（手取り）</span>
+        <div class="field-input-wrap">
+          <input type="number" id="income" value="300" min="0" oninput="update()">
+          <span class="field-unit">万円/年</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">副業収入</span>
+        <div class="field-input-wrap">
+          <input type="number" id="side" value="0" min="0" oninput="update()">
+          <span class="field-unit">万円/年</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">現在の貯金額</span>
+        <div class="field-input-wrap">
+          <input type="number" id="savings" value="0" min="0" oninput="update()">
+          <span class="field-unit">万円</span>
+        </div>
+      </div>
+
+      <div class="section-sep">
+        <div class="section-label">毎月の支出（項目を自由に編集）</div>
+        <div class="expense-list" id="expense-list"></div>
+        <button class="add-btn" onclick="addExpense()">＋ 支出項目を追加</button>
+        <div class="expense-summary">
+          <span>支出合計</span>
+          <span class="expense-summary-val"><span id="expense-total">—</span> 万円/月</span>
+        </div>
+      </div>
+
+      <div class="section-sep">
+        <div class="section-label">株式投資（任意）</div>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="invest-toggle" onchange="toggleInvest()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">株式投資を含める</span>
+        </div>
+        <div class="invest-section" id="invest-section">
+          <div class="field-row">
+            <span class="field-label">現在の株式資産</span>
+            <div class="field-input-wrap">
+              <input type="number" id="stock" value="0" min="0" oninput="update()">
+              <span class="field-unit">万円</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <span class="field-label">毎月の積立金額</span>
+            <div class="field-input-wrap">
+              <input type="number" id="monthly" value="3" min="0" step="0.5" oninput="update()">
+              <span class="field-unit">万円/月</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <span class="field-label">想定年利回り</span>
+            <div class="field-input-wrap">
+              <input type="number" id="rate" value="5" min="0" max="30" step="0.1" oninput="update()">
+              <span class="field-unit">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rc-label">最終資産</div>
+          <div class="rc-value" id="res-total">—</div>
+          <div class="rc-unit">万円</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">現金資産</div>
+          <div class="rc-value" id="res-cash">—</div>
+          <div class="rc-unit">万円</div>
+        </div>
+        <div class="result-card" id="card-surplus">
+          <div class="rc-label">月間余剰</div>
+          <div class="rc-value" id="res-surplus">—</div>
+          <div class="rc-unit">万円/月</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">支出合計</div>
+          <div class="rc-value" id="res-expense">—</div>
+          <div class="rc-unit">万円/月</div>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-header">
+          <span class="chart-title">資産推移グラフ</span>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3b82f6"></div>現金
+            </div>
+            <div class="legend-item" id="legend-stock" style="display:none">
+              <div class="legend-dot" style="background:#10b981"></div>株式
+            </div>
+          </div>
+        </div>
+        <canvas id="chart" height="200"></canvas>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-title">年別資産推移</div>
+        <table>
+          <thead>
+            <tr>
+              <th>経過年数</th>
+              <th>年齢</th>
+              <th>現金資産</th>
+              <th id="th-stock" style="display:none">株式資産</th>
+              <th>合計資産</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    ※ このシミュレーターは概算です。税金・インフレ・運用コストは考慮していません。投資判断はご自身の責任で行ってください。
+  </footer>
+</div>
+
+<script>
+let chart = null;
+
+const expenses = [
+  { name: '家賃', amount: 6 },
+  { name: '光熱費', amount: 2 },
+  { name: 'スマホ', amount: 1 },
+  { name: '食費', amount: 3 },
+  { name: '交通費', amount: 1 },
+  { name: '雑費', amount: 3 },
+];
+
+function renderExpenses() {
+  const list = document.getElementById('expense-list');
+  list.innerHTML = '';
+  expenses.forEach((exp, i) => {
+    const item = document.createElement('div');
+    item.className = 'expense-item';
+    item.innerHTML = `
+      <input class="expense-name-input" type="text" value="${exp.name}" placeholder="項目名"
+        oninput="expenses[${i}].name=this.value">
+      <div class="expense-divider"></div>
+      <input class="expense-amount-input" type="number" value="${exp.amount}" min="0" step="0.5"
+        oninput="expenses[${i}].amount=parseFloat(this.value)||0; update()">
+      <span class="expense-unit">万/月</span>
+      <button class="delete-btn" onclick="removeExpense(${i})">×</button>
+    `;
+    list.appendChild(item);
+  });
+  update();
+}
+
+function addExpense() {
+  expenses.push({ name: '', amount: 0 });
+  renderExpenses();
+  const inputs = document.querySelectorAll('.expense-name-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function removeExpense(i) {
+  expenses.splice(i, 1);
+  renderExpenses();
+}
+
+function toggleInvest() {
+  const on = document.getElementById('invest-toggle').checked;
+  document.getElementById('invest-section').classList.toggle('active', on);
+  document.getElementById('legend-stock').style.display = on ? 'flex' : 'none';
+  document.getElementById('th-stock').style.display = on ? '' : 'none';
+  update();
+}
+
+function fmt(v) { return Math.round(v).toLocaleString(); }
+
+function update() {
+  const age     = parseFloat(document.getElementById('age').value)     || 0;
+  const years   = parseFloat(document.getElementById('years').value)   || 1;
+  const income  = parseFloat(document.getElementById('income').value)  || 0;
+  const side    = parseFloat(document.getElementById('side').value)    || 0;
+  const savings = parseFloat(document.getElementById('savings').value) || 0;
+  const useInvest = document.getElementById('invest-toggle').checked;
+  const stock   = parseFloat(document.getElementById('stock').value)   || 0;
+  const monthly = parseFloat(document.getElementById('monthly').value) || 0;
+  const rate    = parseFloat(document.getElementById('rate').value)    || 0;
+
+  const totalExp = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  document.getElementById('expense-total').textContent = totalExp.toFixed(1);
+  document.getElementById('res-expense').textContent = totalExp.toFixed(1);
+
+  const monthlyIncome = (income + side) / 12;
+  const surplusMonthly = monthlyIncome - totalExp - (useInvest ? monthly : 0);
+  const surplusYearly  = surplusMonthly * 12;
+
+  const cardSurplus = document.getElementById('card-surplus');
+  document.getElementById('res-surplus').textContent = surplusMonthly.toFixed(1);
+  cardSurplus.className = surplusMonthly < 0 ? 'result-card warn' : 'result-card';
+
+  const labels = ['現在'];
+  const cashData = [savings];
+  const stockData = [useInvest ? stock : 0];
+  const totalData = [savings + (useInvest ? stock : 0)];
+  const tableRows = [];
+
+  let cash = savings;
+  let stockVal = useInvest ? stock : 0;
+
+  for (let y = 1; y <= years; y++) {
+    cash += surplusYearly;
+    if (cash < 0) cash = 0;
+    if (useInvest) stockVal = stockVal * (1 + rate / 100) + monthly * 12;
+    const total = cash + (useInvest ? stockVal : 0);
+    labels.push(`${y}年後`);
+    cashData.push(Math.round(cash));
+    stockData.push(useInvest ? Math.round(stockVal) : 0);
+    totalData.push(Math.round(total));
+    if (y <= 10 || y % 5 === 0) {
+      tableRows.push({ y, curAge: age + y, cash: Math.round(cash), stock: useInvest ? Math.round(stockVal) : 0, total: Math.round(total) });
+    }
+  }
+
+  document.getElementById('res-total').textContent = fmt(totalData[totalData.length - 1]);
+  document.getElementById('res-cash').textContent  = fmt(cashData[cashData.length - 1]);
+
+  const datasets = [{
+    label: '現金資産', data: cashData,
+    borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+    fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+  }];
+
+  if (useInvest) datasets.push({
+    label: '株式資産', data: stockData,
+    borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.06)',
+    fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+  });
+
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets = datasets;
+    chart.update('none');
+  } else {
+    const ctx = document.getElementById('chart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a2235', borderColor: '#1e2d45', borderWidth: 1,
+            titleColor: '#94a3b8', bodyColor: '#f1f5f9', padding: 10,
+            callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toLocaleString()} 万円` }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#475569', font: { size: 11 }, maxTicksLimit: 8 } },
+          y: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#475569', font: { size: 11 }, callback: v => v.toLocaleString() + ' 万' } }
+        }
+      }
+    });
+  }
+
+  document.getElementById('table-body').innerHTML = tableRows.map(r => `
+    <tr>
+      <td>${r.y}年後</td>
+      <td>${r.curAge}歳</td>
+      <td>${r.cash.toLocaleString()} 万</td>
+      ${useInvest ? `<td>${r.stock.toLocaleString()} 万</td>` : ''}
+      <td class="td-total">${r.total.toLocaleString()} 万</td>
+    </tr>
+  `).join('');
+}
+
+renderExpenses();
+</script>
+</body>
+</html>
