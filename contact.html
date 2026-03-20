@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お問い合わせ｜資産シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --font: 'Noto Sans JP', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    line-height: 1.8;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .site-name {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    text-decoration: none;
+  }
+
+  .site-name:hover { background: rgba(59,130,246,0.15); }
+
+  h1 {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub { color: var(--text2); font-size: 14px; font-weight: 300; }
+
+  .form-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    margin-bottom: 40px;
+  }
+
+  .field { margin-bottom: 20px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .required { color: var(--accent); margin-left: 4px; }
+
+  input[type="text"],
+  input[type="email"],
+  select,
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  select:focus,
+  textarea:focus { border-color: var(--accent); }
+
+  input::placeholder, textarea::placeholder { color: var(--text3); }
+  textarea { resize: vertical; min-height: 140px; line-height: 1.7; }
+
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 500;
+    padding: 14px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover { opacity: 0.9; }
+  .submit-btn:active { transform: scale(0.99); }
+
+  .note {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 16px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  footer {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--text3);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  footer a { color: var(--text3); margin: 0 8px; text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <a class="site-name" href="./index.html">← 資産シミュレーターに戻る</a>
+    <h1>お<span>問い合わせ</span></h1>
+    <p class="header-sub">ご意見・ご要望・不具合報告などお気軽にどうぞ</p>
+  </header>
+
+  <div class="form-panel">
+    <form action="https://formspree.io/f/myknvwwz" method="POST">
+
+      <!-- 送信後にこのページに戻るリダイレクト設定 -->
+      <input type="hidden" name="_next" value="https://my-simulator.github.io/asset-simulator/contact.html?sent=true">
+
+      <div class="field">
+        <label>お名前 <span class="required">*</span></label>
+        <input type="text" name="name" placeholder="山田 太郎" required>
+      </div>
+
+      <div class="field">
+        <label>メールアドレス <span class="required">*</span></label>
+        <input type="email" name="email" placeholder="example@email.com" required>
+      </div>
+
+      <div class="field">
+        <label>お問い合わせ種別</label>
+        <select name="category">
+          <option value="">選択してください</option>
+          <option value="bug">不具合・エラー報告</option>
+          <option value="feature">機能改善のご要望</option>
+          <option value="question">使い方のご質問</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>お問い合わせ内容 <span class="required">*</span></label>
+        <textarea name="message" placeholder="お問い合わせ内容をご記入ください。" required></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">送信する</button>
+
+      <p class="note">※ 送信前に<a href="./privacy.html" style="color:var(--accent)">プライバシーポリシー</a>をご確認ください。</p>
+    </form>
+  </div>
+
+  <footer>
+    <a href="./index.html">資産シミュレーター</a>
+    <a href="./privacy.html">プライバシーポリシー</a>
+    <a href="./contact.html">お問い合わせ</a>
+  </footer>
+</div>
+
+<script>
+  // 送信完了後にURLパラメータ?sent=trueが付く場合にメッセージ表示
+  if (location.search.includes('sent=true')) {
+    const panel = document.querySelector('.form-panel');
+    panel.innerHTML = `
+      <div style="text-align:center; padding:48px 24px;">
+        <div style="width:56px;height:56px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:24px;">✓</div>
+        <h2 style="font-size:20px;font-weight:500;margin-bottom:8px;">送信完了しました</h2>
+        <p style="font-size:14px;color:var(--text2);font-weight:300;">お問い合わせありがとうございます。<br>内容を確認の上、折り返しご連絡いたします。</p>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
