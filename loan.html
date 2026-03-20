@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ローン・住宅ローンシミュレーター｜毎月の返済額を無料計算</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --font: 'Noto Sans JP', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-label {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-sub { color: var(--text2); font-size: 14px; font-weight: 300; }
+
+  .nav-link {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+    text-decoration: none;
+    margin-top: 16px;
+  }
+
+  .nav-link:hover { color: var(--accent); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .tab {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text3);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .tab.active {
+    background: rgba(59,130,246,0.1);
+    border-color: rgba(59,130,246,0.3);
+    color: var(--accent);
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .field-label {
+    font-size: 13px;
+    color: var(--text2);
+    flex: 1;
+  }
+
+  .field-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  input[type="number"] {
+    width: 100px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 6px 10px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus { border-color: var(--accent); }
+
+  .field-unit {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    width: 44px;
+  }
+
+  .section-sep {
+    margin: 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--accent3);
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+
+  /* Right col */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 600px) { .result-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+
+  .result-card.highlight {
+    border-color: rgba(59,130,246,0.35);
+    background: rgba(59,130,246,0.06);
+  }
+
+  .result-card.danger {
+    border-color: rgba(239,68,68,0.35);
+    background: rgba(239,68,68,0.05);
+  }
+
+  .rc-label { font-size: 10px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.05em; margin-bottom: 5px; }
+  .rc-value { font-size: 20px; font-family: var(--mono); font-weight: 500; color: var(--text); line-height: 1; }
+  .result-card.highlight .rc-value { color: var(--accent); }
+  .result-card.danger .rc-value { color: var(--danger); }
+  .rc-unit { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+  .chart-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-title { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+  .legend { display: flex; gap: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  .timeline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+
+  .timeline-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+  th {
+    text-align: right;
+    padding: 7px 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th:first-child { text-align: left; }
+
+  td {
+    text-align: right;
+    padding: 9px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text2);
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    white-space: nowrap;
+  }
+
+  td:first-child { text-align: left; color: var(--text3); font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .td-accent { color: var(--accent) !important; font-weight: 500; }
+  .td-danger { color: var(--danger) !important; }
+  tr:hover td { background: rgba(59,130,246,0.03); }
+
+  footer {
+    text-align: center;
+    padding: 40px 0 28px;
+    color: var(--text3);
+    font-size: 11px;
+    line-height: 1.8;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  footer a { color: var(--text3); margin: 0 8px; text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-label">FREE SIMULATOR</div>
+    <h1>ローン<span>返済</span>を計算する</h1>
+    <p class="header-sub">借入額・金利・返済期間を入力して、毎月の返済額と総支払額をシミュレーション</p>
+    <a class="nav-link" href="./index.html">← 資産シミュレーターに戻る</a>
+  </header>
+
+  <div class="layout">
+    <!-- Left panel -->
+    <div class="panel">
+      <div class="panel-title">ローン種別</div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="setType('mortgage')">住宅ローン</button>
+        <button class="tab" onclick="setType('car')">カーローン</button>
+        <button class="tab" onclick="setType('other')">その他</button>
+      </div>
+
+      <div class="panel-title">借入情報</div>
+
+      <div class="field-row">
+        <span class="field-label">借入金額</span>
+        <div class="field-input-wrap">
+          <input type="number" id="principal" value="3000" min="1" oninput="update()">
+          <span class="field-unit">万円</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">年利率</span>
+        <div class="field-input-wrap">
+          <input type="number" id="rate" value="1.5" min="0.01" max="30" step="0.01" oninput="update()">
+          <span class="field-unit">%</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">返済期間</span>
+        <div class="field-input-wrap">
+          <input type="number" id="years" value="35" min="1" max="50" oninput="update()">
+          <span class="field-unit">年</span>
+        </div>
+      </div>
+
+      <div class="section-sep">
+        <div class="section-label">頭金・ボーナス返済（任意）</div>
+
+        <div class="field-row">
+          <span class="field-label">頭金</span>
+          <div class="field-input-wrap">
+            <input type="number" id="downpayment" value="0" min="0" oninput="update()">
+            <span class="field-unit">万円</span>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <span class="field-label">年2回ボーナス返済額</span>
+          <div class="field-input-wrap">
+            <input type="number" id="bonus" value="0" min="0" oninput="update()">
+            <span class="field-unit">万円/回</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-sep">
+        <div class="section-label">年収（返済比率の目安）</div>
+
+        <div class="field-row">
+          <span class="field-label">年収（手取り）</span>
+          <div class="field-input-wrap">
+            <input type="number" id="income" value="400" min="1" oninput="update()">
+            <span class="field-unit">万円/年</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right col -->
+    <div class="right-col">
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rc-label">毎月の返済額</div>
+          <div class="rc-value" id="res-monthly">—</div>
+          <div class="rc-unit">万円/月</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">総返済額</div>
+          <div class="rc-value" id="res-total">—</div>
+          <div class="rc-unit">万円</div>
+        </div>
+        <div class="result-card" id="card-interest">
+          <div class="rc-label">利息総額</div>
+          <div class="rc-value" id="res-interest">—</div>
+          <div class="rc-unit">万円</div>
+        </div>
+        <div class="result-card" id="card-ratio">
+          <div class="rc-label">返済比率</div>
+          <div class="rc-value" id="res-ratio">—</div>
+          <div class="rc-unit">%（目安25%以下）</div>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-header">
+          <span class="chart-title">元金・利息の内訳推移</span>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3b82f6"></div>元金残高
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#f59e0b"></div>累計利息
+            </div>
+          </div>
+        </div>
+        <canvas id="chart" height="200"></canvas>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-title">年別返済推移</div>
+        <table>
+          <thead>
+            <tr>
+              <th>経過年数</th>
+              <th>年間返済額</th>
+              <th>うち利息</th>
+              <th>元金残高</th>
+              <th>累計返済額</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    ※ 元利均等返済方式で計算しています。実際の返済額は金融機関によって異なる場合があります。<br>
+    <a href="./index.html">資産シミュレーター</a>
+    <a href="./privacy.html">プライバシーポリシー</a>
+    <a href="./contact.html">お問い合わせ</a>
+  </footer>
+</div>
+
+<script>
+let chart = null;
+
+const presets = {
+  mortgage: { principal: 3000, rate: 1.5, years: 35 },
+  car:      { principal: 300,  rate: 3.0, years: 5  },
+  other:    { principal: 100,  rate: 5.0, years: 3  },
+};
+
+function setType(type) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['mortgage','car','other'][i] === type);
+  });
+  const p = presets[type];
+  document.getElementById('principal').value   = p.principal;
+  document.getElementById('rate').value        = p.rate;
+  document.getElementById('years').value       = p.years;
+  document.getElementById('downpayment').value = 0;
+  document.getElementById('bonus').value       = 0;
+  update();
+}
+
+function fmt(v, d = 1) {
+  return v.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function update() {
+  const principalTotal = parseFloat(document.getElementById('principal').value) || 0;
+  const downpayment    = parseFloat(document.getElementById('downpayment').value) || 0;
+  const rate           = parseFloat(document.getElementById('rate').value) || 0;
+  const years          = parseFloat(document.getElementById('years').value) || 1;
+  const bonus          = parseFloat(document.getElementById('bonus').value) || 0;
+  const income         = parseFloat(document.getElementById('income').value) || 1;
+
+  const principal = Math.max(0, principalTotal - downpayment);
+  const months    = years * 12;
+  const r         = rate / 100 / 12;
+
+  if (principal <= 0 || rate <= 0) {
+    document.getElementById('res-monthly').textContent  = '—';
+    document.getElementById('res-total').textContent    = '—';
+    document.getElementById('res-interest').textContent = '—';
+    document.getElementById('res-ratio').textContent    = '—';
+    return;
+  }
+
+  // 元利均等返済
+  const monthlyPayment = r === 0
+    ? principal / months
+    : principal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
+
+  // 年間ボーナス返済 (万円)
+  const bonusYearly = bonus * 2;
+
+  const totalPayment  = monthlyPayment * months + bonusYearly * years;
+  const totalInterest = totalPayment - principal;
+  const annualPayment = monthlyPayment * 12 + bonusYearly;
+  const ratio         = (annualPayment / income) * 100;
+
+  document.getElementById('res-monthly').textContent  = fmt(monthlyPayment);
+  document.getElementById('res-total').textContent    = fmt(totalPayment);
+  document.getElementById('res-interest').textContent = fmt(totalInterest);
+  document.getElementById('res-ratio').textContent    = fmt(ratio, 1);
+
+  const cardRatio = document.getElementById('card-ratio');
+  cardRatio.className = ratio > 25 ? 'result-card danger' : 'result-card';
+
+  // Year-by-year simulation
+  const labels       = [];
+  const balanceData  = [];
+  const interestData = [];
+  const tableRows    = [];
+
+  let balance     = principal * 10000; // 円換算
+  let totalPaid   = 0;
+  let totalInterestPaid = 0;
+
+  labels.push('現在');
+  balanceData.push(Math.round(balance / 10000));
+  interestData.push(0);
+
+  for (let y = 1; y <= years; y++) {
+    let yearInterest   = 0;
+    let yearPrincipal  = 0;
+    let yearTotal      = 0;
+
+    for (let m = 1; m <= 12; m++) {
+      const intPart  = balance * (rate / 100 / 12);
+      const prinPart = monthlyPayment * 10000 - intPart;
+      balance       -= prinPart;
+      if (balance < 0) balance = 0;
+      yearInterest  += intPart;
+      yearPrincipal += prinPart;
+      yearTotal     += monthlyPayment * 10000;
+    }
+
+    // ボーナス返済
+    const bonusPrincipal = Math.min(bonus * 2 * 10000, balance);
+    balance       -= bonusPrincipal;
+    if (balance < 0) balance = 0;
+    yearTotal     += bonus * 2 * 10000;
+    yearPrincipal += bonusPrincipal;
+
+    totalPaid          += yearTotal;
+    totalInterestPaid  += yearInterest;
+
+    labels.push(`${y}年後`);
+    balanceData.push(Math.round(Math.max(0, balance) / 10000));
+    interestData.push(Math.round(totalInterestPaid / 10000));
+
+    if (y <= 10 || y % 5 === 0) {
+      tableRows.push({
+        y,
+        yearTotal:    Math.round(yearTotal / 10000),
+        yearInterest: Math.round(yearInterest / 10000),
+        balance:      Math.round(Math.max(0, balance) / 10000),
+        totalPaid:    Math.round(totalPaid / 10000),
+      });
+    }
+  }
+
+  // Chart
+  const datasets = [
+    {
+      label: '元金残高',
+      data: balanceData,
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.08)',
+      fill: true, tension: 0.4, borderWidth: 2,
+      pointRadius: 0, pointHoverRadius: 4,
+      yAxisID: 'y',
+    },
+    {
+      label: '累計利息',
+      data: interestData,
+      borderColor: '#f59e0b',
+      backgroundColor: 'rgba(245,158,11,0.06)',
+      fill: true, tension: 0.4, borderWidth: 2,
+      pointRadius: 0, pointHoverRadius: 4,
+      yAxisID: 'y',
+    },
+  ];
+
+  if (chart) {
+    chart.data.labels   = labels;
+    chart.data.datasets = datasets;
+    chart.update('none');
+  } else {
+    const ctx = document.getElementById('chart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a2235', borderColor: '#1e2d45', borderWidth: 1,
+            titleColor: '#94a3b8', bodyColor: '#f1f5f9', padding: 10,
+            callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toLocaleString()} 万円` }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#475569', font: { size: 11 }, maxTicksLimit: 8 } },
+          y: { grid: { color: 'rgba(30,45,69,0.5)' }, ticks: { color: '#475569', font: { size: 11 }, callback: v => v.toLocaleString() + ' 万' } }
+        }
+      }
+    });
+  }
+
+  // Table
+  document.getElementById('table-body').innerHTML = tableRows.map(r => `
+    <tr>
+      <td>${r.y}年後</td>
+      <td>${r.yearTotal.toLocaleString()} 万</td>
+      <td class="td-danger">${r.yearInterest.toLocaleString()} 万</td>
+      <td>${r.balance.toLocaleString()} 万</td>
+      <td class="td-accent">${r.totalPaid.toLocaleString()} 万</td>
+    </tr>
+  `).join('');
+}
+
+// Init
+update();
+</script>
+</body>
+</html>
