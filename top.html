@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お金のシミュレーター｜資産・ローン計算を無料で</title>
+<meta name="description" content="資産シミュレーター・ローンシミュレーターなど、お金に関する無料計算ツールを提供しています。将来の資産形成や借入返済計画にお役立てください。">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --accent3: #f59e0b;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --font: 'Noto Sans JP', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Nav */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  .nav-links { display: flex; gap: 24px; }
+
+  .nav-links a {
+    font-size: 12px;
+    color: var(--text3);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .nav-links a:hover { color: var(--text2); }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 80px 0 72px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 20px;
+  }
+
+  h1 .grad {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text2);
+    font-weight: 300;
+    max-width: 520px;
+    margin: 0 auto 36px;
+    line-height: 1.8;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 500;
+    padding: 14px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .hero-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (max-width: 500px) { .stats { gap: 24px; } }
+
+  .stat { text-align: center; }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-value span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label { font-size: 12px; color: var(--text3); }
+
+  /* Tools section */
+  .tools-section { padding: 64px 0; }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .section-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .section-sub { font-size: 14px; color: var(--text2); font-weight: 300; }
+
+  /* Tool cards */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tool-card.blue::before  { background: linear-gradient(90deg, var(--accent), #60a5fa); }
+  .tool-card.green::before { background: linear-gradient(90deg, var(--accent2), #34d399); }
+  .tool-card.amber::before { background: linear-gradient(90deg, var(--accent3), #fcd34d); }
+
+  .tool-card:hover {
+    border-color: #2a3d5a;
+    transform: translateY(-2px);
+  }
+
+  .tool-card:hover::before { opacity: 1; }
+
+  .tool-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .tool-card.blue .tool-icon  { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); }
+  .tool-card.green .tool-icon { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+  .tool-card.amber .tool-icon { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); }
+
+  .tool-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .tool-desc {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .tool-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tool-tag {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--text3);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .tool-arrow {
+    position: absolute;
+    top: 28px; right: 28px;
+    font-size: 18px;
+    color: var(--text3);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .tool-card:hover .tool-arrow { color: var(--accent); transform: translate(2px, -2px); }
+
+  /* Coming soon card */
+  .tool-card.coming {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+  }
+
+  .coming-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--accent3);
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+
+  /* Features */
+  .features {
+    padding: 64px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+  }
+
+  @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
+
+  .feature {
+    text-align: center;
+    padding: 24px;
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .feature-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .feature-desc {
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-copy {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  .footer-links { display: flex; gap: 20px; }
+
+  .footer-links a {
+    font-size: 11px;
+    color: var(--text3);
+    text-decoration: none;
+  }
+
+  .footer-links a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Nav -->
+  <nav>
+    <a class="logo" href="./top.html">MONEY TOOLS</a>
+    <div class="nav-links">
+      <a href="./index.html">資産計算</a>
+      <a href="./loan.html">ローン計算</a>
+      <a href="./contact.html">お問い合わせ</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">FREE &amp; NO REGISTRATION</div>
+    <h1>お金の計算を、<br><span class="grad">もっとかんたんに。</span></h1>
+    <p class="hero-sub">資産形成・ローン返済・投資シミュレーションなど、お金にまつわる計算ツールを無料で提供しています。登録不要ですぐに使えます。</p>
+    <a class="hero-cta" href="./index.html">資産シミュレーターを使う →</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value"><span>2</span></div>
+      <div class="stat-label">無料ツール</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value"><span>0</span>円</div>
+      <div class="stat-label">完全無料</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value"><span>登録</span></div>
+      <div class="stat-label">不要</div>
+    </div>
+  </div>
+
+  <!-- Tools -->
+  <div class="tools-section">
+    <div class="section-header">
+      <div class="section-tag">Tools</div>
+      <h2>ツール一覧</h2>
+      <p class="section-sub">目的にあわせてお使いください</p>
+    </div>
+
+    <div class="tools-grid">
+
+      <a href="./index.html" class="tool-card blue">
+        <span class="tool-arrow">↗</span>
+        <div class="tool-icon">📈</div>
+        <div class="tool-title">資産シミュレーター</div>
+        <div class="tool-desc">年収・支出・投資利回りを入力して、将来の資産推移をグラフで確認できます。株式投資の複利効果も計算可能。</div>
+        <div class="tool-tags">
+          <span class="tool-tag">資産形成</span>
+          <span class="tool-tag">投資</span>
+          <span class="tool-tag">老後資金</span>
+        </div>
+      </a>
+
+      <a href="./loan.html" class="tool-card green">
+        <span class="tool-arrow">↗</span>
+        <div class="tool-icon">🏠</div>
+        <div class="tool-title">ローンシミュレーター</div>
+        <div class="tool-desc">住宅ローン・カーローンの毎月返済額と総支払額を計算。頭金・ボーナス返済にも対応。返済比率の目安もわかります。</div>
+        <div class="tool-tags">
+          <span class="tool-tag">住宅ローン</span>
+          <span class="tool-tag">カーローン</span>
+          <span class="tool-tag">返済計画</span>
+        </div>
+      </a>
+
+      <div class="tool-card amber coming">
+        <div class="coming-badge">COMING SOON</div>
+        <div class="tool-icon">🔥</div>
+        <div class="tool-title">FIREシミュレーター</div>
+        <div class="tool-desc">経済的自由（FIRE）に必要な資産額と達成までの期間を計算します。</div>
+        <div class="tool-tags">
+          <span class="tool-tag">FIRE</span>
+          <span class="tool-tag">経済的自由</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="section-header">
+      <div class="section-tag">Features</div>
+      <h2>このサイトについて</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">入力データは保存されません</div>
+        <div class="feature-desc">入力した数値はすべてブラウザ内で処理されます。外部サーバーへの送信は一切ありません。</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title">スマホ・PCどちらでも</div>
+        <div class="feature-desc">スマートフォン・タブレット・PCに対応したレスポンシブデザインです。</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">登録不要・完全無料</div>
+        <div class="feature-desc">アカウント登録なしですぐに使えます。すべてのツールが無料で利用できます。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <span class="footer-copy">© 2025 MONEY TOOLS</span>
+    <div class="footer-links">
+      <a href="./privacy.html">プライバシーポリシー</a>
+      <a href="./contact.html">お問い合わせ</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
